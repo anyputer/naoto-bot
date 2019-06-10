@@ -29,7 +29,7 @@ version = "1.0.92"
 features = ["derive"]
 
 [dependencies.nekos]
-path = "../nekos"
+path = "./nekos"
 
 [dependencies.image]
 git = "https://github.com/image-rs/image"
