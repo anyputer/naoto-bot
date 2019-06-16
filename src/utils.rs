@@ -69,7 +69,7 @@ pub enum PrideFlag {
 }
 
 impl PrideFlag {
-    #![allow(clippy::unreadable_literal)]
+    #[allow(clippy::unreadable_literal)]
     pub fn colors(&self) -> &'static [u32] {
         use crate::utils::PrideFlag::*;
 
@@ -184,6 +184,7 @@ pub fn read_config() -> Result<Config, Box<dyn std::error::Error>> {
 }
 
 /// Gets the bot's guild count.
+#[inline]
 pub fn get_guild_count(ctx: &Context) -> usize {
     ctx.cache.read().guilds.len()
 }

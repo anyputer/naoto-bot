@@ -11,7 +11,7 @@ use serenity::framework::standard::{
 
 use serenity::model::{
     channel::Message,
-    gateway::Ready,
+    gateway::{Ready, Activity},
     guild::{Guild, PartialGuild},
     id::{GuildId, UserId},
 };
@@ -30,8 +30,8 @@ impl EventHandler for Handler {
         utils::update_activity(&ctx);
     }
 
-    fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
-        utils::update_activity(&ctx);
+    fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
+        ctx.set_activity(Activity::listening(&format!("{} servers", guilds.len())));
     }
 
     fn guild_create(&self, ctx: Context, _guild: Guild, is_new: bool) {
