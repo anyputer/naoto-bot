@@ -69,6 +69,7 @@ pub enum PrideFlag {
 }
 
 impl PrideFlag {
+    #![allow(clippy::unreadable_literal)]
     pub fn colors(&self) -> &'static [u32] {
         use crate::utils::PrideFlag::*;
 

@@ -446,6 +446,13 @@ impl Client {
     }
 }
 
+impl Default for Client {
+    #[inline]
+    fn default() -> Client {
+        Client::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{ImageCategory, ImageCategory::*, NsfwRating::*, ParseImageCategoryError};

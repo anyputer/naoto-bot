@@ -182,7 +182,7 @@ fn zip(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     for attachment in msg.attachments.iter() {
         zip.start_file(&*attachment.filename, FileOptions::default())?;
-        zip.write(&attachment.download()?)?;
+        zip.write_all(&attachment.download()?)?;
     }
 
     msg.channel_id.send_files(
@@ -366,7 +366,7 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
     let a = match args.single::<u8>() {
         Ok(percent) if percent >= 20 && percent <= 80 => {
-            ((percent as f64 / 100.0) * 255.0).trunc() as u8
+            ((f64::from(percent) / 100.0) * 255.0).trunc() as u8
         }
         _ => 127,
     };
@@ -419,7 +419,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.with_framework(
         StandardFramework::new()
             .configure(|c| {
-                c.prefix(&config.prefix.unwrap_or(String::from(":-")))
+                c.prefix(&config.prefix.unwrap_or_else(|| String::from(":-")))
                     .on_mention(Some(serenity::model::id::UserId(494_235_198_582_423_552)))
                     .no_dm_prefix(true)
             })
