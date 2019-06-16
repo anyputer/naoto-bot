@@ -11,7 +11,7 @@ use serenity::framework::standard::{
 
 use serenity::model::{
     channel::Message,
-    gateway::{Ready, Activity},
+    gateway::{Activity, Ready},
     guild::{Guild, PartialGuild},
     id::{GuildId, UserId},
 };
@@ -350,63 +350,93 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
     use lenient_bool::LenientBool;
 
-    msg.channel_id.broadcast_typing(&ctx)?;
+    use random_color::{Luminosity, RandomColor};
 
-    let flag: PrideFlag = args.single().unwrap_or_default();
+    use itertools::Itertools;
 
-    let filter = match args.single::<LenientBool>() {
-        Ok(lb) => lb.into(),
-        _ => false,
-    };
-    let filter = if filter {
-        FilterType::Gaussian
-    } else {
-        FilterType::Nearest
-    };
+    use enum_iterator::IntoEnumIterator;
 
-    let a = match args.single::<u8>() {
-        Ok(percent) if percent >= 20 && percent <= 80 => {
-            ((f64::from(percent) / 100.0) * 255.0).trunc() as u8
+    if args.current() != Some("list") {
+        msg.channel_id.broadcast_typing(&ctx)?;
+
+        let flag: PrideFlag = args.single().unwrap_or_default();
+
+        let filter = match args.single::<LenientBool>() {
+            Ok(lb) => lb.into(),
+            _ => false,
+        };
+        let filter = if filter {
+            FilterType::Gaussian
+        } else {
+            FilterType::Nearest
+        };
+
+        let a = match args.single::<u8>() {
+            Ok(percent) if percent >= 20 && percent <= 80 => {
+                ((f64::from(percent) / 100.0) * 255.0).trunc() as u8
+            }
+            _ => 127,
+        };
+
+        let mut image_bytes = vec![];
+        reqwest::get(&msg.author.static_avatar_url().unwrap())?.copy_to(&mut image_bytes)?;
+
+        let mut image =
+            image::load_from_memory_with_format(&image_bytes, ImageFormat::WEBP)?.to_rgba();
+
+        let mut prideflag_image = DynamicImage::new_rgba8(1, flag.colors().iter().count() as u32);
+        for (i, color) in flag.colors().iter().enumerate() {
+            let (r, g, b) = (
+                ((*color >> 16) & 255) as u8,
+                ((*color >> 8) & 255) as u8,
+                (*color & 255) as u8,
+            );
+
+            prideflag_image.put_pixel(0, i as u32, image::Rgba([r, g, b, a]));
         }
-        _ => 127,
-    };
 
-    let mut image_bytes = vec![];
-    reqwest::get(&msg.author.static_avatar_url().unwrap())?.copy_to(&mut image_bytes)?;
+        let prideflag_image = prideflag_image.resize_exact(image.width(), image.height(), filter);
+        imageops::overlay(&mut image, &prideflag_image, 0, 0);
 
-    let mut image = image::load_from_memory_with_format(&image_bytes, ImageFormat::WEBP)?.to_rgba();
+        let mut output_bytes = vec![];
+        PNGEncoder::new(&mut output_bytes).encode(
+            &image.into_raw(),
+            prideflag_image.width(),
+            prideflag_image.height(),
+            ColorType::RGBA(8),
+        )?;
 
-    let mut prideflag_image = DynamicImage::new_rgba8(1, flag.colors().iter().count() as u32);
-    for (i, color) in flag.colors().iter().enumerate() {
-        let (r, g, b) = (
-            ((*color >> 16) & 255) as u8,
-            ((*color >> 8) & 255) as u8,
-            (*color & 255) as u8,
+        msg.channel_id.send_message(&ctx, |m| {
+            m.embed(|e| {
+                e.footer(|f| f.text(&flag))
+                    .colour(*flag.colors().choose(&mut thread_rng()).unwrap())
+                    .image("attachment://prideified.png")
+            });
+            m.add_file(AttachmentType::Bytes((&output_bytes, "prideified.png")));
+            m
+        })?;
+    } else {
+        /*
+        msg.channel_id.send_message(&ctx, |m| m.embed(|e| e.footer(|f| f.text("If you want to see a flag get added, please let @hyarsan#3653 know."))
+                .colour(utils::gen_random_color(RandomColor::new().luminosity(Luminosity::Bright))
         );
+        */
 
-        prideflag_image.put_pixel(0, i as u32, image::Rgba([r, g, b, a]));
+        msg.channel_id.send_message(&ctx, |m| {
+            m.embed(|e| {
+                e.title("Available Pride Flags")
+                    .description(PrideFlag::into_enum_iter().join("\n"))
+                    .footer(|f| {
+                        f.text(
+                            "If you want to see a flag get added, please let @hyarsan#3653 know.",
+                        )
+                    })
+                    .colour(utils::gen_random_color(
+                        RandomColor::new().luminosity(Luminosity::Bright),
+                    ))
+            })
+        })?;
     }
-
-    let prideflag_image = prideflag_image.resize_exact(image.width(), image.height(), filter);
-    imageops::overlay(&mut image, &prideflag_image, 0, 0);
-
-    let mut output_bytes = vec![];
-    PNGEncoder::new(&mut output_bytes).encode(
-        &image.into_raw(),
-        prideflag_image.width(),
-        prideflag_image.height(),
-        ColorType::RGBA(8),
-    )?;
-
-    msg.channel_id.send_message(&ctx, |m| {
-        m.embed(|e| {
-            e.footer(|f| f.text(&flag))
-                .colour(*flag.colors().choose(&mut thread_rng()).unwrap())
-                .image("attachment://prideified.png")
-        });
-        m.add_file(AttachmentType::Bytes((&output_bytes, "prideified.png")));
-        m
-    })?;
 
     Ok(())
 }

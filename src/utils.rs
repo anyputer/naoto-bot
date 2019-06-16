@@ -15,6 +15,8 @@ use random_color::RandomColor;
 
 use serde::Deserialize;
 
+use enum_iterator::IntoEnumIterator;
+
 #[derive(Debug, Clone)]
 pub enum Dice {
     One = 1,
@@ -51,7 +53,7 @@ impl fmt::Display for Dice {
     }
 }
 
-#[derive(Debug)]
+#[derive(IntoEnumIterator, Debug)]
 pub enum PrideFlag {
     Rainbow,
     Lesbian,
@@ -143,19 +145,19 @@ impl fmt::Display for PrideFlag {
         use crate::utils::PrideFlag::*;
 
         f.pad(match self {
-            Rainbow => "rainbow pride flag",
-            Lesbian => "lesbian pride flag",
-            Bi => "bisexual pride flag",
-            Pan => "pansexual pride flag",
-            Poly => "polysexual pride flag",
-            Trans => "transgender pride flag",
-            Genderqueer => "genderqueer pride flag",
-            NonBinary => "non-binary pride flag",
-            Genderfluid => "genderfluid pride flag",
-            Agender => "agender pride flag",
-            Neutrois => "neutrois pride flag",
-            Asexual => "asexual pride flag",
-            Aromantic => "aromantic pride flag",
+            Rainbow => "rainbow",
+            Lesbian => "lesbian",
+            Bi => "bisexual",
+            Pan => "pansexual",
+            Poly => "polysexual",
+            Trans => "transgender",
+            Genderqueer => "genderqueer",
+            NonBinary => "non-binary",
+            Genderfluid => "genderfluid",
+            Agender => "agender",
+            Neutrois => "neutrois",
+            Asexual => "asexual",
+            Aromantic => "aromantic",
         })
     }
 }

@@ -19,6 +19,7 @@ serde_json = "1.0.39"
 ferris-says = "0.1.1"
 itertools = "0.8.0"
 lenient_bool = "0.1.1"
+enum-iterator = "0.3.0"
 
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity"
