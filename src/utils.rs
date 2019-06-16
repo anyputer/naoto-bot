@@ -174,7 +174,7 @@ pub struct Config {
 }
 
 /// Reads the bot's configuration file.
-pub fn read_config() -> Result<Config, Box<std::error::Error>> {
+pub fn read_config() -> Result<Config, Box<dyn std::error::Error>> {
     let contents = fs::read_to_string("config.toml")?;
 
     let config: Config = toml::from_str(&contents)?;

@@ -30,7 +30,7 @@ impl EventHandler for Handler {
         utils::update_activity(&ctx);
     }
 
-    fn cached(&self, ctx: Context, _guilds: Vec<GuildId>) {
+    fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
         utils::update_activity(&ctx);
     }
 
@@ -384,9 +384,7 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             (*color & 255) as u8,
         );
 
-        unsafe {
-            prideflag_image.unsafe_put_pixel(0, i as u32, image::Rgba([r, g, b, a]));
-        }
+        prideflag_image.put_pixel(0, i as u32, image::Rgba([r, g, b, a]));
     }
 
     let prideflag_image = prideflag_image.resize_exact(image.width(), image.height(), filter);
@@ -413,7 +411,7 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     Ok(())
 }
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = utils::read_config()?;
 
     let mut client = Client::new(&config.token, Handler)?;
@@ -426,7 +424,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
                     .no_dm_prefix(true)
             })
             .group(&GENERAL_GROUP)
-            .help(&HELP_COMMAND_HELP_COMMAND)
+            .help(&HELP_COMMAND)
             .prefix_only(|ctx, msg| {
                 about(ctx, msg, Args::new("", &[Delimiter::Single(' ')]))
                     .expect("couldn't run the about command");

@@ -286,7 +286,7 @@ impl error::Error for ParseImageCategoryError {
         "provided string wasn't a valid image category"
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         None
     }
 }
