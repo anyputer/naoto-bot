@@ -34,3 +34,6 @@ path = "./nekos"
 
 [dependencies.image]
 git = "https://github.com/image-rs/image"
+
+[profile.release]
+lto = true

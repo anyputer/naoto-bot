@@ -231,67 +231,56 @@ fn mcskin(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
 #[command]
 #[aliases("nl")]
+#[usage("<image category> <optional amount>")]
+#[example("hug 3")]
 fn nekoslife(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     use itertools::Itertools;
     use nekos::{self, ImageCategory};
     use random_color::{Luminosity, RandomColor};
 
-    if let Some(category) = args.current() {
-        if let Ok(category) = category.parse::<ImageCategory>() {
-            if category.is_sfw() || msg.channel_id.to_channel(&ctx)?.is_nsfw() {
-                let client = nekos::Client::new();
+    let channel = msg.channel_id.to_channel(&ctx)?;
+    let client = nekos::Client::new();
+    let embed_color = utils::gen_random_color(RandomColor::new().luminosity(Luminosity::Light));
 
-                msg.channel_id.broadcast_typing(&ctx)?;
+    if let Ok(category) = args.single::<ImageCategory>() {
+        if category.is_sfw() || channel.is_nsfw() || msg.is_private() {
+            msg.channel_id.broadcast_typing(&ctx)?;
 
-                args.advance();
-                if let Ok(amount) = args.single::<u8>() {
-                    let mut output = String::new();
-                    for _ in 0..amount {
-                        output += &client.get_random_image(category.clone())?.url;
-                        output += "\n";
-                    }
-
-                    msg.channel_id.say(&ctx, output)?;
-                } else {
-                    let image = client.get_random_image(category.clone())?;
-
-                    let embed_color =
-                        utils::gen_random_color(RandomColor::new().luminosity(Luminosity::Light));
-
-                    msg.channel_id.send_message(&ctx, |m| {
-                        m.embed(|e| {
-                            e.footer(|f| f.text(format!("Category: {}", category)))
-                                .image(image.url)
-                                .colour(embed_color)
-                        })
-                    })?;
+            if let Ok(amount) = args.single::<u8>() {
+                let mut output = String::new();
+                for _ in 0..amount {
+                    output += &client.get_random_image(category.clone())?.url;
+                    output += "\n";
                 }
+
+                msg.channel_id.say(&ctx, output)?;
             } else {
-                msg.channel_id.say(
-                    &ctx,
-                    "The image category isn't SFW, so you have to be in an NSFW channel to use it.",
-                )?;
+                let image = client.get_random_image(category.clone())?;
+
+                msg.channel_id.send_message(&ctx, |m| {
+                    m.embed(|e| {
+                        e.footer(|f| f.text(format!("Category: {}", category)))
+                            .image(image.url)
+                            .colour(embed_color)
+                    })
+                })?;
             }
         } else {
-            msg.channel_id
-                .say(&ctx, "Invalid image category specified.")?;
+            msg.channel_id.say(
+                &ctx,
+                "The image category isn't SFW, so you have to be in an NSFW channel to use it.",
+            )?;
         }
     } else {
-        let client = nekos::Client::new();
-
         let mut categories = client.get_image_categories()?;
-        if !msg.channel_id.to_channel(&ctx)?.is_nsfw() {
+        if !(channel.is_nsfw() || msg.is_private()) {
             categories.retain(|c| c.is_sfw());
         }
-
-        let description = categories.iter().join(SEPERATOR);
-
-        let embed_color = utils::gen_random_color(RandomColor::new().luminosity(Luminosity::Light));
 
         msg.channel_id.send_message(&ctx, |m| {
             m.embed(|e| {
                 e.title("Available Image Categories")
-                    .description(description)
+                    .description(categories.iter().join(SEPERATOR))
                     .colour(embed_color)
             })
         })?;
@@ -302,6 +291,8 @@ fn nekoslife(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult 
 
 #[command]
 #[description = "Makes Ferris the Crab say something."]
+#[usage("<text to say>")]
+#[example("Hello, world!")]
 fn ferrissays(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     use serenity::utils::MessageBuilder;
 
@@ -335,8 +326,10 @@ fn sum(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
 #[command]
 #[description = "Makes your avatar all the more gay! 🏳️‍🌈"]
+#[usage("<pride flag> <gradient on> <opacity from 20 to 80>")]
+#[example("rainbow true 60")]
 fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
-    use crate::utils::PrideFlag;
+    use crate::utils::{FlagType, PrideFlag};
 
     use serenity::http::AttachmentType;
 
@@ -359,7 +352,7 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     if args.current() != Some("list") {
         msg.channel_id.broadcast_typing(&ctx)?;
 
-        let flag: PrideFlag = args.single().unwrap_or_default();
+        let pf: PrideFlag = args.single().unwrap_or_default();
 
         let filter = match args.single::<LenientBool>() {
             Ok(lb) => lb.into(),
@@ -384,32 +377,38 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         let mut image =
             image::load_from_memory_with_format(&image_bytes, ImageFormat::WEBP)?.to_rgba();
 
-        let mut prideflag_image = DynamicImage::new_rgba8(1, flag.colors().iter().count() as u32);
-        for (i, color) in flag.colors().iter().enumerate() {
-            let (r, g, b) = (
-                ((*color >> 16) & 255) as u8,
-                ((*color >> 8) & 255) as u8,
-                (*color & 255) as u8,
-            );
+        let pf_size = match pf.flag_type() {
+            FlagType::Vertical => (1, pf.colors().iter().count() as u32),
+            FlagType::Horizontal => (pf.colors().iter().count() as u32, 1),
+        };
 
-            prideflag_image.put_pixel(0, i as u32, image::Rgba([r, g, b, a]));
+        let mut pf_image = DynamicImage::new_rgba8(pf_size.0, pf_size.1);
+        for (i, color) in pf.colors().iter().enumerate() {
+            let (r, g, b) = utils::hex_to_rgb(*color);
+
+            let pixel_xy = match pf.flag_type() {
+                FlagType::Vertical => (0, i as u32),
+                FlagType::Horizontal => (i as u32, 0),
+            };
+
+            pf_image.put_pixel(pixel_xy.0, pixel_xy.1, image::Rgba([r, g, b, a]));
         }
 
-        let prideflag_image = prideflag_image.resize_exact(image.width(), image.height(), filter);
-        imageops::overlay(&mut image, &prideflag_image, 0, 0);
+        let pf_image = pf_image.resize_exact(image.width(), image.height(), filter);
+        imageops::overlay(&mut image, &pf_image, 0, 0);
 
         let mut output_bytes = vec![];
         PNGEncoder::new(&mut output_bytes).encode(
             &image.into_raw(),
-            prideflag_image.width(),
-            prideflag_image.height(),
+            pf_image.width(),
+            pf_image.height(),
             ColorType::RGBA(8),
         )?;
 
         msg.channel_id.send_message(&ctx, |m| {
             m.embed(|e| {
-                e.footer(|f| f.text(&flag))
-                    .colour(*flag.colors().choose(&mut thread_rng()).unwrap())
+                e.footer(|f| f.text(pf))
+                    .colour(*pf.colors().choose(&mut thread_rng()).unwrap())
                     .image("attachment://prideified.png")
             });
             m.add_file(AttachmentType::Bytes((&output_bytes, "prideified.png")));
@@ -427,9 +426,11 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 e.title("Available Pride Flags")
                     .description(PrideFlag::into_enum_iter().join("\n"))
                     .footer(|f| {
-                        f.text(
-                            "If you want to see a flag get added, please let @hyarsan#3653 know.",
-                        )
+                        f.text(format!(
+                            "Currently, there are *{}* unique pride flags to represent everyone. \
+                             If you want to see a flag get added, please let @hyarsan#3653 know.",
+                            PrideFlag::into_enum_iter().count()
+                        ))
                     })
                     .colour(utils::gen_random_color(
                         RandomColor::new().luminosity(Luminosity::Bright),

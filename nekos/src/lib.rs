@@ -17,7 +17,7 @@ const BASE_URL_API_V2: &str = "https://nekos.life/api/v2";
  * These are just represented as `Bj` and `Blowjob`.
  */
 
-/// Enum that represents the various image categories
+/// An image category.
 #[derive(Debug, PartialEq, Clone)]
 pub enum ImageCategory {
     Femdom,
@@ -92,19 +92,23 @@ pub enum ImageCategory {
     Other(String),
 }
 
-/// Enum that represents the level of NSFW of the image category.
+/// The NSFW level of an image category.
 ///
 /// This is subjective.
 #[derive(Debug, PartialEq)]
 pub enum NsfwRating {
     /// All images in the image category are Safe For Work.
     Sfw,
+
     /// Image category contains (some) nudity, naked feet etc.
     Questionable,
+
     /// Image category contains (some) nudity, naked feet, female nipples etc.
     QuestionableNipples,
+
     /// Image category contains Not Safe For Work content, including nudity, erotica etc.
     Nsfw,
+
     /// The NSFW rating for `ImageCategory::Other` and unknown image categories.
     Unknown,
 }
@@ -188,6 +192,7 @@ impl ImageCategory {
     }
 
     /// Returns whether or not the image category is Safe For Work.
+    #[inline]
     pub fn is_sfw(&self) -> bool {
         self.nsfw_rating() == NsfwRating::Sfw
     }
