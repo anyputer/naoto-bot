@@ -1,0 +1,10 @@
+pub mod about;
+pub mod coinflip;
+pub mod dice;
+pub mod eightball;
+pub mod ferrissays;
+pub mod nekoslife;
+pub mod ping;
+pub mod pride;
+pub mod zip;
+// pub mod spoiler;

@@ -1,4 +1,7 @@
-# naoto-bot  [![guild-badge][]][guild]
+# naoto-bot [![guild-badge][]][guild] [![invite-badge][]][invite]
+
+<img align="right" src="https://cdn.discordapp.com/avatars/494235198582423552/578f4810281946bea11b5ce2ebf41157.png">
+
 A Discord bot written in Rust using [Serenity].
 
 This bot is a work-in-progress.
@@ -13,6 +16,12 @@ token = "<bot token>"
 
 Other settings are currently unsupported.
 
+Self hosting isn't advised. Custom bot emojis won't appear as intended.
+
 [guild]: https://discord.gg/ZJvqBK7
 [guild-badge]: https://img.shields.io/discord/516256587694866452.svg?style=flat-square&colorB=7289DA
+
+[invite]: https://discordapp.com/oauth2/authorize?client_id=494235198582423552&permissions=8&scope=bot
+[invite-badge]: https://img.shields.io/badge/naoto-invite-black.svg?style=flat-square&colorB=7289DA
+
 [Serenity]: https://github.com/serenity-rs/serenity

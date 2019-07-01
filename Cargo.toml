@@ -6,12 +6,12 @@ edition = "2018"
 description = "A Discord bot written in Rust using Serenity."
 
 [dependencies]
-rand = "0.6.5"
+rand = "0.7.0"
 toml = "0.5.1"
 unicode-segmentation = "1.3.0"
 reqwest = "0.9.18"
 base64 = "0.10.1"
-percent-encoding = "1.0.1"
+# percent-encoding = "1.0.1"
 # sled = "0.21.3"
 zip = "0.5.2"
 random_color = "0.4.4"
@@ -20,13 +20,15 @@ ferris-says = "0.1.1"
 itertools = "0.8.0"
 lenient_bool = "0.1.1"
 enum-iterator = "0.3.0"
+voca_rs = "1.7.0"
+# lazy_static = "1.3.0"
 
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity"
-branch = "v0.6.x"
+branch = "current"
 
 [dependencies.serde]
-version = "1.0.92"
+version = "1.0.94"
 features = ["derive"]
 
 [dependencies.nekos]
