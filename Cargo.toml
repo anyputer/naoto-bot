@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["hyarsan"]
 edition = "2018"
 description = "A Discord bot written in Rust using Serenity."
+license = "GPL-3.0+"
 
 [dependencies]
 rand = "0.7.0"
