@@ -1,6 +1,6 @@
 # naoto-bot [![guild-badge][]][guild] [![invite-badge][]][invite]
 
-<img align="right" src="https://cdn.discordapp.com/avatars/494235198582423552/578f4810281946bea11b5ce2ebf41157.png">
+<img align="right" src="./assets/naoto.png">
 
 A Discord bot written in Rust using [Serenity].
 
