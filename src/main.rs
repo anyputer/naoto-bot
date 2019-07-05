@@ -4,7 +4,7 @@ mod utils;
 use crate::commands::{
     about::ABOUT_COMMAND, coinflip::COINFLIP_COMMAND, dice::DICE_COMMAND,
     eightball::EIGHTBALL_COMMAND, ferrissays::FERRISSAYS_COMMAND, nekoslife::NEKOSLIFE_COMMAND,
-    ping::PING_COMMAND, pride::PRIDE_COMMAND, zip::ZIP_COMMAND,
+    ping::PING_COMMAND, pride::PRIDE_COMMAND, spoiler::SPOILER_COMMAND, zip::ZIP_COMMAND,
 };
 
 use std::collections::HashSet;
@@ -52,7 +52,7 @@ impl EventHandler for Handler {
 group!({
     name: "general",
     options: {},
-    commands: [about, ping, coinflip, dice, nekoslife, zip, ferrissays, pride, eightball],
+    commands: [about, ping, coinflip, dice, nekoslife, zip, ferrissays, pride, eightball, spoiler],
 });
 
 #[help]

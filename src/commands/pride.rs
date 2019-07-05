@@ -107,11 +107,7 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
         let pf: PrideFlag = args.single().unwrap_or_default();
 
-        let filter = match args.single::<LenientBool>() {
-            Ok(lb) => lb.into(),
-            _ => false,
-        };
-        let filter = if filter {
+        let filter = if args.single::<LenientBool>().map(|lb| lb.0).unwrap_or(false) {
             FilterType::Gaussian
         } else {
             FilterType::Nearest
@@ -125,7 +121,12 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         };
 
         let mut image_bytes = vec![];
-        reqwest::get(&msg.author.static_avatar_url().unwrap())?.copy_to(&mut image_bytes)?;
+        reqwest::get(
+            &msg.author
+                .static_avatar_url()
+                .ok_or("couldn't get static avatar url")?,
+        )?
+        .copy_to(&mut image_bytes)?;
 
         let mut image =
             image::load_from_memory_with_format(&image_bytes, ImageFormat::WEBP)?.to_rgba();
@@ -167,18 +168,16 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         }
         */
 
-        let mut description = String::new();
-        for pf in PrideFlag::into_enum_iter() {
-            description += prideflag_emoji(pf);
-            description += " ";
-            description += &pf.to_string();
-            description += "\n";
-        }
+        use itertools::Itertools;
 
         msg.channel_id.send_message(&ctx, |m| {
             m.embed(|e| {
                 e.title("Available Pride Flags")
-                    .description(description)
+                    .description(
+                        PrideFlag::into_enum_iter()
+                            .map(|pf| format!("{} {}", prideflag_emoji(pf), pf))
+                            .join("\n"),
+                    )
                     .footer(|f| {
                         f.text(format!(
                             "Currently, there are *{}* unique pride flags to represent everyone. \

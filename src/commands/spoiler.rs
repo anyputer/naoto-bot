@@ -2,17 +2,29 @@ use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+use unicode_segmentation::UnicodeSegmentation;
+
 #[command]
 fn spoiler(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
-    use serenity::utils::MessageBuilder;
-    use unicode_segmentation::UnicodeSegmentation;
-
-    let mut output = MessageBuilder::new();
-    for grapheme in args.rest().graphemes(true) {
-        output.push_spoiler(grapheme);
+    // delete message if possible
+    if let Some(guild) = msg.guild(&ctx) {
+        if guild
+            .read()
+            .member(&ctx, &ctx.cache.read().user)?
+            .permissions(&ctx)?
+            .manage_messages()
+        {
+            msg.delete(&ctx)?;
+        }
     }
 
-    msg.channel_id.say(&ctx, output)?;
+    msg.channel_id.say(
+        &ctx,
+        args.rest()
+            .graphemes(true)
+            .map(|g| format!("||{}||", g))
+            .collect::<String>(),
+    )?;
 
     Ok(())
 }

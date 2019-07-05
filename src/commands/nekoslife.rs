@@ -21,25 +21,23 @@ fn nekoslife(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult 
         if category.is_sfw() || channel.is_nsfw() || msg.is_private() {
             msg.channel_id.broadcast_typing(&ctx)?;
 
-            if let Ok(mut amount) = args.single::<u8>() {
+            if let Ok(mut amount) = args.single::<usize>() {
                 if amount > 50 {
                     amount = 50;
                 }
 
-                let mut output = String::new();
-                for _ in 0..amount {
-                    output += &client.get_random_image(category.clone())?.url;
-                    output += "\n";
-                }
+                let responses = client.get_random_images(category.clone(), amount);
+                dbg!(responses.clone());
+                let output = responses.iter().map(|img| &img.url).join("\n");
 
                 msg.channel_id.say(&ctx, output)?;
             } else {
-                let image = client.get_random_image(category.clone())?;
+                let image = &client.get_random_images(category.clone(), 1)[0];
 
                 msg.channel_id.send_message(&ctx, |m| {
                     m.embed(|e| {
                         e.footer(|f| f.text(format!("Category: {}", category)))
-                            .image(image.url)
+                            .image(&image.url)
                             .colour(embed_color)
                     })
                 })?;
