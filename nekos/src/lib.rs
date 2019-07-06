@@ -2,9 +2,11 @@ use std::error;
 use std::fmt;
 use std::str::FromStr;
 
-use rhttp_massreq::massreq;
+// use rhttp_massreq::massreq;
 
 use regex::Regex;
+
+const BASE_URL_API_V2: &str = "https://nekos.life/api/v2";
 
 /*
  * NOTE:
@@ -383,7 +385,7 @@ impl FromStr for ImageCategory {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Image {
     pub url: String,
     pub category: ImageCategory,
@@ -433,8 +435,7 @@ impl Client {
 
         Ok(result)
     }
-    
-    /*
+
     /// Gets a random image from the category.
     pub fn get_random_image(&self, category: ImageCategory) -> Result<Image, reqwest::Error> {
         let mut resp = self
@@ -447,8 +448,8 @@ impl Client {
 
         Ok(Image { url, category })
     }
-    */
 
+    /*
     /// Retrieves random images from the category.
     pub fn get_random_images(&self, category: ImageCategory, amount: usize) -> Vec<Image> {
         massreq("nekos.life".to_string(), format!("/api/v2/img/{}", category), amount).into_iter().map(|jsonstr| {
@@ -463,6 +464,7 @@ impl Client {
             }
         }).flatten().collect()
     }
+    */
 }
 
 impl Default for Client {
