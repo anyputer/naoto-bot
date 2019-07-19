@@ -7,6 +7,7 @@ use rand::{
     thread_rng, Rng,
 };
 use serenity::utils::MessageBuilder;
+use itertools::Itertools;
 use std::fmt;
 
 #[command]
@@ -17,30 +18,24 @@ fn dice(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         _ => 5,
     };
 
-    let mut dices = Vec::with_capacity(dices_amount);
-
     let mut rng = thread_rng();
-    for _ in 0..dices_amount {
-        dices.push(rng.gen::<Dice>())
-    }
 
-    let dices_iter = dices.iter();
+    let dice_vec = (0..dices_amount).map(|_| rng.gen::<Dice>()).collect::<Vec<Dice>>();
+    let dice_iter = dice_vec.iter().copied();
 
     let mut output = MessageBuilder::new();
 
-    for dice in dices_iter.clone() {
-        output.push(&dice);
-    }
+    output.push_line(dice_iter.clone().join(" "));
 
     if dices_amount > 1 {
-        output.push("\nThe numbers are: ");
+        output.push("The numbers are: ");
     } else {
-        output.push("\nThe number is: ");
+        output.push("The number is: ");
     }
 
-    for (i, dice) in dices_iter.clone().enumerate() {
+    for (i, dice) in dice_iter.clone().enumerate() {
         if i != (dices_amount - 1) {
-            output.push_bold(dice.clone() as u8);
+            output.push_bold(dice as u8);
 
             if dices_amount != 2 {
                 output.push(", ");
@@ -52,13 +47,14 @@ fn dice(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 output.push("and ");
             }
 
-            output.push_bold(dice.clone() as u8);
-            output.push(".\n");
+            output.push_bold(dice as u8);
+            output.push_line(".");
         }
     }
 
     if dices_amount > 1 {
-        let sum: u8 = dices_iter.map(|d| d.clone() as u8).sum();
+        let sum: u8 = dice_iter.map(|d| d as u8).sum();
+
         output.push("The total is: ");
         output.push_bold(sum);
         output.push(".");
@@ -69,7 +65,7 @@ fn dice(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     Ok(())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Dice {
     One = 1,
     Two = 2,
@@ -93,7 +89,7 @@ impl Distribution<Dice> for Standard {
 }
 
 impl fmt::Display for Dice {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad(match self {
             Dice::One => "<:dice_1:501061465265143838>",
             Dice::Two => "<:dice_2:501061466552795137>",

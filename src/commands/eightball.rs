@@ -15,13 +15,22 @@ use std::fmt;
 fn eightball(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let answer: Answer = rand::random();
 
-    let question = voca_rs::case::upper_first(args.rest());
-    let mut question = question.replace(" i ", " I ").replace(" i'm ", " I'm ");
-    if let Some(c) = question.chars().last() {
-        if c != '?' && c != '>' {
-            question += "?";
+    let question = voca_rs::case::upper_first(args.rest())
+        .replace(" i ", " I ")
+        .replace(" i'm ", " I'm ");
+    let mut question_vec = question.chars().collect::<Vec<char>>();
+
+    if let Some(c) = question_vec.last_mut() {
+        match *c {
+            '.' | '!' => *c = '?',
+            ch @ _ if ch != '?' && ch != '>' => {
+                question_vec.push('?');
+            }
+            _ => (),
         }
     }
+
+    let question = question_vec.into_iter().collect::<String>();
 
     msg.channel_id.send_message(&ctx, |m| m
         .embed(|e| e
@@ -96,7 +105,7 @@ impl Distribution<Answer<'static>> for Standard {
 }
 
 impl<'a> fmt::Display for Answer<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad(self.as_inner())
     }
 }
