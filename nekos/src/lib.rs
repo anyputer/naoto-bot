@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 // use rhttp_massreq::massreq;
 
+use enum_iterator::IntoEnumIterator;
 use regex::Regex;
 
 const BASE_URL_API_V2: &str = "https://nekos.life/api/v2";
@@ -16,7 +17,7 @@ const BASE_URL_API_V2: &str = "https://nekos.life/api/v2";
  */
 
 /// An image category.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, IntoEnumIterator)]
 pub enum ImageCategory {
     Femdom,
     Tickle,
@@ -86,14 +87,12 @@ pub enum ImageCategory {
     PwankGif,
     EroNeko,
     EroKemo,
-
-    Other(String),
 }
 
 /// The NSFW level of an image category.
 ///
 /// This is subjective.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum NsfwRating {
     /// All images in the image category are Safe For Work.
     Sfw,
@@ -107,13 +106,13 @@ pub enum NsfwRating {
     /// Image category contains Not Safe For Work content, including nudity, erotica etc.
     Nsfw,
 
-    /// The NSFW rating for `ImageCategory::Other` and unknown image categories.
+    /// The NSFW rating for unknown image categories.
     Unknown,
 }
 
 impl ImageCategory {
     /// Returns the NSFW rating for the image category.
-    pub fn nsfw_rating(&self) -> NsfwRating {
+    pub fn nsfw_rating(self) -> NsfwRating {
         use ImageCategory::*;
         use NsfwRating::*;
 
@@ -184,23 +183,43 @@ impl ImageCategory {
             PwankGif => Nsfw,
             EroNeko => QuestionableNipples,
             EroKemo => QuestionableNipples,
-
-            Other(_) => Unknown,
         }
     }
 
     /// Returns whether or not the image category is Safe For Work.
     #[inline]
-    pub fn is_sfw(&self) -> bool {
+    pub fn is_sfw(self) -> bool {
         self.nsfw_rating() == NsfwRating::Sfw
+    }
+
+    /// Gets multiple random images from the category.
+    ///
+    /// Use `ImageCategory::get_random` or `Client::get_random_image` if you only need one.
+    pub fn get_random_images(self, amount: usize) -> Vec<Result<Image, reqwest::Error>> {
+        let client = Client::new();
+
+        let mut result = Vec::with_capacity(amount);
+        for _ in 0..amount {
+            result.push(client.get_random_image(self));
+        }
+
+        result
+    }
+
+    /// Shortcut to `Client::new().get_random_image(self)`.
+    ///
+    /// Use `Client` or `ImageCategory::get_random_images` method if you need multiple images.
+    #[inline]
+    pub fn get_random(self) -> Result<Image, reqwest::Error> {
+        Client::new().get_random_image(self)
     }
 }
 
 impl fmt::Display for ImageCategory {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use ImageCategory::*;
 
-        let s = match self {
+        f.pad(match self {
             Femdom => "femdom",
             Tickle => "tickle",
             Classic => "classic",
@@ -267,11 +286,7 @@ impl fmt::Display for ImageCategory {
             PwankGif => "pwankg",
             EroNeko => "eron",
             EroKemo => "erokemo",
-
-            ImageCategory::Other(s) => s,
-        };
-
-        write!(f, "{}", s)
+        })
     }
 }
 
@@ -279,7 +294,7 @@ impl fmt::Display for ImageCategory {
 pub struct ParseImageCategoryError;
 
 impl fmt::Display for ParseImageCategoryError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "provided string wasn't a valid image category")
     }
 }
@@ -396,6 +411,7 @@ pub struct Client {
 }
 
 impl Client {
+    #[inline]
     pub fn new() -> Client {
         Client {
             client: reqwest::Client::new(),
@@ -417,10 +433,8 @@ impl Client {
             .find_iter(&s)
             .map(|m| m.as_str())
             .map(|s| s.trim_matches('\'').to_string())
-            .map(|s| {
-                s.parse::<ImageCategory>()
-                    .unwrap_or(ImageCategory::Other(s))
-            })
+            .map(|s| s.parse::<ImageCategory>())
+            .filter_map(Result::ok)
             .collect::<Vec<ImageCategory>>();
 
         /*
@@ -480,19 +494,19 @@ mod tests {
 
     #[test]
     fn image_category_from_str() {
-        let foo = "neko".parse::<ImageCategory>();
-        assert_eq!(foo, Ok(ImageCategory::Neko));
+        let category = "neko".parse::<ImageCategory>();
+        assert_eq!(category, Ok(ImageCategory::Neko));
 
-        let foo = "nimbat".parse::<ImageCategory>();
-        assert_eq!(foo, Err(ParseImageCategoryError));
+        let category = "nimbat".parse::<ImageCategory>();
+        assert!(category.is_err());
     }
 
     #[test]
     fn image_category_to_string() {
         assert_eq!(ImageCategory::Neko.to_string(), "neko");
         assert_eq!(
-            ImageCategory::Other(String::from("nimbat")).to_string(),
-            "nimbat"
+            ImageCategory::RandomHentaiGif.to_string(),
+            "Random_hentai_gif"
         );
     }
 
@@ -500,7 +514,6 @@ mod tests {
     fn image_category_nsfw_rating() {
         assert_eq!(Hug.nsfw_rating(), Sfw);
         assert_eq!(Hentai.nsfw_rating(), Nsfw);
-        assert_eq!(Other(String::from("nimbat")).nsfw_rating(), Unknown);
     }
 
     /*

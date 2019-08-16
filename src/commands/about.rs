@@ -11,7 +11,10 @@ const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 #[aliases("invite")]
 #[description = "Sends some info about the bot."]
 fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
+    use random_color::{Luminosity, RandomColor};
+
     let guild_count = utils::get_guild_count(&ctx);
+    let embed_color = utils::gen_random_color(RandomColor::new().luminosity(Luminosity::Light));
 
     msg.channel_id.send_message(&ctx, |m| m
         .embed(|e| e
@@ -21,6 +24,7 @@ fn about(ctx: &mut Context, msg: &Message) -> CommandResult {
             .footer(|f| f
                 .text(format!("Servers: {}", guild_count))
             )
+            .color(embed_color)
         )
     )?;
 

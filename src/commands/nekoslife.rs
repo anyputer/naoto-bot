@@ -9,32 +9,32 @@ use serenity::prelude::*;
 #[usage("<image category> <optional amount>")]
 #[example("hug 3")]
 fn nekoslife(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+    use enum_iterator::IntoEnumIterator;
     use itertools::Itertools;
     use nekos::{self, ImageCategory};
     use random_color::{Luminosity, RandomColor};
 
     let channel = msg.channel_id.to_channel(&ctx)?;
-    let client = nekos::Client::new();
     let embed_color = utils::gen_random_color(RandomColor::new().luminosity(Luminosity::Light));
 
     if let Ok(category) = args.single::<ImageCategory>() {
         if category.is_sfw() || channel.is_nsfw() || msg.is_private() {
             msg.channel_id.broadcast_typing(&ctx)?;
 
-            if let Ok(mut amount) = args.single::<u8>() {
+            if let Ok(mut amount) = args.single::<usize>() {
                 if amount > 50 {
                     amount = 50;
                 }
 
                 let mut output = String::new();
-                for _ in 0..amount {
-                    output += &client.get_random_image(category.clone())?.url;
+                for image in category.get_random_images(amount).into_iter() {
+                    output += &image?.url;
                     output += "\n";
                 }
 
                 msg.channel_id.say(&ctx, output)?;
             } else {
-                let image = client.get_random_image(category.clone())?;
+                let image = category.get_random()?;
 
                 msg.channel_id.send_message(&ctx, |m| {
                     m.embed(|e| {
@@ -45,22 +45,27 @@ fn nekoslife(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult 
                 })?;
             }
         } else {
-            msg.channel_id.say(
-                &ctx,
-                "The image category isn't SFW, so you have to be in an NSFW channel to use it.",
-            )?;
+            msg.react(&ctx, "\u{1f51e}")?;
         }
     } else {
-        let mut categories = client.get_image_categories()?;
-        if !(channel.is_nsfw() || msg.is_private()) {
-            categories.retain(|c| c.is_sfw());
-        }
+        let (sfw_categories, nsfw_categories): (Vec<ImageCategory>, Vec<ImageCategory>) =
+            ImageCategory::into_enum_iter().partition(|&c| c.is_sfw());
 
         msg.channel_id.send_message(&ctx, |m| {
             m.embed(|e| {
                 e.title("Available Image Categories")
-                    .description(categories.iter().join(utils::SEPERATOR))
-                    .colour(embed_color)
+                    .description(sfw_categories.into_iter().join(utils::SEPERATOR))
+                    .colour(embed_color);
+
+                if channel.is_nsfw() || msg.is_private() {
+                    e.field(
+                        "\u{1f51e} NSFW \u{1f51e}",
+                        nsfw_categories.into_iter().join(utils::SEPERATOR),
+                        false,
+                    )
+                } else {
+                    e
+                }
             })
         })?;
     }

@@ -144,11 +144,26 @@ fn pride(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             ColorType::RGBA(8),
         )?;
 
+        /*
         msg.channel_id.send_message(&ctx, |m| {
             m.embed(|e| {
                 e.footer(|f| f.text(pf))
                     .colour(*pf.colors().choose(&mut thread_rng()).unwrap())
                     .image("attachment://output_pride.png")
+            });
+            m.add_file(AttachmentType::Bytes((&output_bytes, "output_pride.png")));
+            m
+        })?;
+        */
+
+        msg.channel_id.send_message(&ctx, |m| {
+            m.embed(|e| {
+                e.author(|a| {
+                    a.name(format!("{} + {} pride flag", msg.author.name, pf))
+                        .icon_url(msg.author.face())
+                })
+                .colour(*pf.colors().choose(&mut thread_rng()).unwrap())
+                .image("attachment://output_pride.png")
             });
             m.add_file(AttachmentType::Bytes((&output_bytes, "output_pride.png")));
             m
@@ -234,7 +249,7 @@ pub enum PrideFlag {
     Aroflux,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 /// The type of flag.
 pub enum FlagType {
     /// The stripes go from top to bottom.
@@ -430,7 +445,7 @@ impl FromStr for PrideFlag {
 pub struct ParsePrideFlagError;
 
 impl fmt::Display for ParsePrideFlagError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "provided string wasn't a valid pride flag")
     }
 }
@@ -442,7 +457,7 @@ impl error::Error for ParsePrideFlagError {
 }
 
 impl fmt::Display for PrideFlag {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use PrideFlag::*;
 
         f.pad(match self {

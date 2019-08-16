@@ -53,3 +53,15 @@ pub fn hex_to_rgb(color: u32) -> (u8, u8, u8) {
 
     (r, g, b)
 }
+
+/*
+pub fn content_split_emoji(s: &str) -> Vec<String> {
+    use unicode_segmentation::UnicodeSegmentation;
+
+    let mut result = vec![];
+
+    for g in s.graphemes(true) {
+
+    }
+}
+*/

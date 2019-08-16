@@ -23,7 +23,7 @@ fn eightball(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     if let Some(c) = question_vec.last_mut() {
         match *c {
             '.' | '!' => *c = '?',
-            ch @ _ if ch != '?' && ch != '>' => {
+            ch if ch != '?' && ch != '>' => {
                 question_vec.push('?');
             }
             _ => (),

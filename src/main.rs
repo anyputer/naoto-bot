@@ -3,8 +3,9 @@ mod utils;
 
 use crate::commands::{
     about::ABOUT_COMMAND, coinflip::COINFLIP_COMMAND, dice::DICE_COMMAND,
-    eightball::EIGHTBALL_COMMAND, ferrissays::FERRISSAYS_COMMAND, nekoslife::NEKOSLIFE_COMMAND,
-    ping::PING_COMMAND, pride::PRIDE_COMMAND, spoiler::SPOILER_COMMAND, zip::ZIP_COMMAND,
+    eightball::EIGHTBALL_COMMAND, ferrissays::FERRISSAYS_COMMAND, hug::HUG_COMMAND,
+    nekoslife::NEKOSLIFE_COMMAND, ping::PING_COMMAND, pride::PRIDE_COMMAND,
+    spoiler::SPOILER_COMMAND, zip::ZIP_COMMAND,
 };
 
 use std::collections::HashSet;
@@ -53,6 +54,12 @@ group!({
     name: "general",
     options: {},
     commands: [about, ping, coinflip, dice, nekoslife, zip, ferrissays, pride, eightball, spoiler],
+});
+
+group!({
+    name: "wholesome",
+    options: {},
+    commands: [hug],
 });
 
 #[help]
@@ -132,6 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .no_dm_prefix(true)
             })
             .group(&GENERAL_GROUP)
+            .group(&WHOLESOME_GROUP)
             .help(&HELP_COMMAND)
             .prefix_only(|ctx, msg| {
                 (ABOUT_COMMAND.fun)(ctx, msg, Args::new("", &[Delimiter::Single(' ')]))

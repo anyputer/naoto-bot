@@ -2,6 +2,8 @@ use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+use serenity::utils::ContentModifier::Spoiler;
+
 use unicode_segmentation::UnicodeSegmentation;
 
 #[command]
@@ -22,7 +24,7 @@ fn spoiler(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         &ctx,
         args.rest()
             .graphemes(true)
-            .map(|g| format!("||{}||", g))
+            .map(|g| (Spoiler + g).to_string())
             .collect::<String>(),
     )?;
 

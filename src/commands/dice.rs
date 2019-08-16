@@ -2,12 +2,12 @@ use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+use itertools::Itertools;
 use rand::{
     distributions::{Distribution, Standard},
     thread_rng, Rng,
 };
 use serenity::utils::MessageBuilder;
-use itertools::Itertools;
 use std::fmt;
 
 #[command]
@@ -20,7 +20,9 @@ fn dice(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
     let mut rng = thread_rng();
 
-    let dice_vec = (0..dices_amount).map(|_| rng.gen::<Dice>()).collect::<Vec<Dice>>();
+    let dice_vec = (0..dices_amount)
+        .map(|_| rng.gen::<Dice>())
+        .collect::<Vec<Dice>>();
     let dice_iter = dice_vec.iter().copied();
 
     let mut output = MessageBuilder::new();

@@ -3,7 +3,7 @@ use serenity::model::channel::Message;
 use serenity::prelude::*;
 
 use std::io::{Cursor, Write};
-use zip::{write::FileOptions, ZipWriter};
+use zip::ZipWriter;
 
 #[command]
 #[description = "Sends a `.zip` archive containing the attachments."]
@@ -12,8 +12,8 @@ fn zip(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
 
-    for attachment in msg.attachments.iter() {
-        zip.start_file(&*attachment.filename, FileOptions::default())?;
+    for attachment in &msg.attachments {
+        zip.start_file(&*attachment.filename, Default::default())?;
         zip.write_all(&attachment.download()?)?;
     }
 
